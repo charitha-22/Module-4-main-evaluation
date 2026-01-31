@@ -11,4 +11,26 @@ export const createVehicle = async (req, res)=>{
     res.status(201).json(data);
 };
 
-// export const assignDriver = async
+export const assignDriver = async (req, res)=>{
+     const {vehicle_id} = req.params;
+     const {driver_id} = req.body;
+
+     await supabase
+     .from("vehicles")
+     .update({driver_id})
+     .eq("id", vehicleId);
+
+     res.json({msg:"driver added"});
+};
+
+export const getVehicle = async(req,res)=>{
+    const {vehicleId} = req.params;
+
+    const{data} = await supabase
+    .from("vehicles")
+    .select("*")
+    .eq("id", vehicleId)
+    .single()
+
+    res.json(data);
+}

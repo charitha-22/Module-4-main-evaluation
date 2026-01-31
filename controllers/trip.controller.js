@@ -127,3 +127,49 @@ export const deleteTrip = async (req, res) => {
 
   res.json({ msg: "Trip deleted successfully" });
 };
+
+export const endTrip = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+
+    const { data: trip, error: tripError } = await supabase
+      .from("trips")
+      .select("*")
+      .eq("id", tripId)
+      .single();
+
+    if (tripError || !trip) {
+      return res.status(404).json({ msg: "Trip not found" });
+    }
+
+    const { data: vehicle, error: vehicleError } = await supabase
+      .from("vehicles")
+      .select("*")
+      .eq("id", trip.vehicle_id)
+      .single();
+
+    if (vehicleError || !vehicle) {
+      return res.status(404).json({ msg: "Vehicle not found" });
+    }
+    const tripCost = trip.distance_km * vehicle.rate_per_km;
+    await supabase
+      .from("trips")
+      .update({
+        isCompleted: true,
+        tripCost: tripCost
+      })
+      .eq("id", tripId);
+    await supabase
+      .from("vehicles")
+      .update({ isAvailable: true })
+      .eq("id", vehicle.id);
+
+    res.json({
+      msg: "Trip ended successfully",
+      tripCost
+    });
+
+  } catch (err) {
+    res.status(500).json({ msg: "Server error" });
+  }
+};
